@@ -70,7 +70,7 @@
             <StackPanel Grid.Column="2" Margin="10">
                 <Grid Margin="10">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -82,22 +82,21 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBlock Text="Время расчета" FontWeight="Bold" Grid.Row="0" Grid.ColumnSpan="2"/>
-                    <Label Content="Time (h:m:s): -" Grid.Row="1" Grid.Column="0"/>
-                    <TextBox x:Name="Timehms" VerticalAlignment="Center" HorizontalAlignment="Center" Width="90" Grid.Row="1" Grid.Column="1"/>
-                    <Label Content="Time (ms): -"  Grid.Row="2" Grid.Column="0"/>
-                    <TextBox x:Name="Timems"  VerticalAlignment="Center" HorizontalAlignment="Center" Width="90" Grid.Row="2" Grid.Column="1"/>
-                    <Label Content="Recursions: -" Grid.Row="3" Grid.Column="0"/>
-                    <TextBox x:Name="Recursions" VerticalAlignment="Center" HorizontalAlignment="Center" Width="90" Grid.Row="3" Grid.Column="1"/>
+                    <Label Content="Graph loaded " Grid.Row="1" Grid.Column="0"/>
+                    <TextBox x:Name="Graphload" VerticalAlignment="Center" IsReadOnly="True" Grid.Row="1" Grid.Column="1"/>
+                    <Label Content="Reliability time "  Grid.Row="2" Grid.Column="0"/>
+                    <TextBox x:Name="Reliability"  VerticalAlignment="Center" IsReadOnly="True" Grid.Row="2" Grid.Column="1"/>
+                    <Label Content="Num of breaks " Grid.Row="3" Grid.Column="0"/>
+                    <TextBox x:Name="Breaks" VerticalAlignment="Center"  IsReadOnly="True" Grid.Row="3" Grid.Column="1"/>
+                    <Label Content="Reliability" FontWeight="Bold" Grid.Row="4" Grid.ColumnSpan="2"/>
+                    <TextBox x:Name="ReliabilityResult" VerticalAlignment="Center" IsReadOnly="True" Grid.Row="4" Grid.Column="1"/>
 
-                    <Label Content="Результат" FontWeight="Bold" Grid.Row="4" Grid.ColumnSpan="2"/>
-                    <TextBox x:Name="Result" VerticalAlignment="Center" HorizontalAlignment="Center" Width="90" Grid.Row="4" Grid.Column="1"/>
-
-                    <Button x:Name="SaveResultButton" Content="Сохранить результат" Background="LightYellow" Margin="0 15 0 0" Grid.Row="5" Grid.ColumnSpan="2"/>
+                    <Button x:Name="SaveResultButton" Content="Сохранить результат" Background="LightYellow" Margin="0 15 0 0" Grid.Row="5" Grid.ColumnSpan="2" Click="SaveResultButton_Click"/>
                 </Grid>
             </StackPanel>
         </Grid>
 
         <!-- Кнопка внизу -->
-        <Button x:Name="CalculateButtom" Content="Расчет" Grid.Row="2" Height="40" Background="Black" Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Click="Button_Click"/>
+        <Button x:Name="CalculateButtom" Content="Расчет" Grid.Row="2" Height="40" Background="Black" Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Click="CalculateButton_Click"/>
     </Grid>
 </Window>
