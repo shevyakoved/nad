@@ -57,10 +57,10 @@
             <!-- Центр -->
             <GroupBox Header="Показатели надежности" Grid.Column="1" Margin="5">
                 <StackPanel>
-                    <RadioButton Content="Всереминальная надежность (ATR)" Margin="0 30 0 30"/>
-                    <RadioButton Content="K-полюсная надежность (KTR)" Margin="0 0 0 30"/>
+                    <RadioButton x:Name="ATRButton" Content="Всереминальная надежность (ATR)" Margin="0 30 0 30"/>
+                    <RadioButton x:Name="KTRButton" Content="K-полюсная надежность (KTR)" Margin="0 0 0 30"/>
                     <RadioButton>
-                        <TextBox TextWrapping="Wrap" IsReadOnly="True" BorderThickness="0" 
+                        <TextBox x:Name="MENCButton" TextWrapping="Wrap" IsReadOnly="True" BorderThickness="0" 
                                  Text="Ожидаемое число узлов, связанных с полюсами (MENC)" />
                     </RadioButton>
                 </StackPanel>
@@ -86,7 +86,7 @@
                     <TextBox x:Name="Graphload" VerticalAlignment="Center" IsReadOnly="True" Grid.Row="1" Grid.Column="1"/>
                     <Label Content="Reliability time "  Grid.Row="2" Grid.Column="0"/>
                     <TextBox x:Name="Reliability"  VerticalAlignment="Center" IsReadOnly="True" Grid.Row="2" Grid.Column="1"/>
-                    <Label Content="Num of breaks " Grid.Row="3" Grid.Column="0"/>
+                    <Label Content="Recursions" Grid.Row="3" Grid.Column="0"/>
                     <TextBox x:Name="Breaks" VerticalAlignment="Center"  IsReadOnly="True" Grid.Row="3" Grid.Column="1"/>
                     <Label Content="Reliability" FontWeight="Bold" Grid.Row="4" Grid.ColumnSpan="2"/>
                     <TextBox x:Name="ReliabilityResult" VerticalAlignment="Center" IsReadOnly="True" Grid.Row="4" Grid.Column="1"/>
