@@ -59,8 +59,8 @@
                 <StackPanel>
                     <RadioButton x:Name="ATRButton" Content="Всереминальная надежность (ATR)" Margin="0 30 0 30"/>
                     <RadioButton x:Name="KTRButton" Content="K-полюсная надежность (KTR)" Margin="0 0 0 30"/>
-                    <RadioButton>
-                        <TextBox x:Name="MENCButton" TextWrapping="Wrap" IsReadOnly="True" BorderThickness="0" 
+                    <RadioButton x:Name="MENCButton">
+                        <TextBox x:Name="MENCButtonText" TextWrapping="Wrap" IsReadOnly="True" BorderThickness="0" 
                                  Text="Ожидаемое число узлов, связанных с полюсами (MENC)" />
                     </RadioButton>
                 </StackPanel>

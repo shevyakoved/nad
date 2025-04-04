@@ -5,24 +5,26 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.IO;
+using System.Diagnostics;
+using System.Globalization;
 
 namespace diplom
 {
-    [StructLayout(LayoutKind.Sequential)]
-    struct Graph
-    {
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10001)]
-        public int[] KAO;
+    //[StructLayout(LayoutKind.Sequential)]
+    //struct Graph
+    //{
+    //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10001)]
+    //    public int[] KAO;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30000)]
-        public int[] FO;
+    //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30000)]
+    //    public int[] FO;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30000)]
-        public double[] PArray;
+    //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30000)]
+    //    public double[] PArray;
 
-        public int VertNumb;
-        public int EdgNumb;
-    }
+    //    public int VertNumb;
+    //    public int EdgNumb;
+    //}
 
 
     [StructLayout(LayoutKind.Sequential)]
@@ -70,26 +72,18 @@ namespace diplom
 
     public partial class MainWindow : Window
     {
-        [DllImport("GraphLibrary.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern Graph GraphFromFile(string filePath, ref double executionTime);
-
-        [DllImport("GraphLibrary.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern double MCReliability(ref Graph graph, int number, ref double executionTime, ref int breaks);
-
-        [DllImport("GraphLibrary.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern void GraphFromStrings(string KAO, string FO, IntPtr graphPtr);
-
-
-
         [DllImport("KTerminalDll.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern double CalculateReliability(ref KGraph G, ref double timeMS, ref int recursionCount);
 
         [DllImport("KTerminalDll.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern KGraph ReadingGraphFromFile(string filePath, ref double executionTime);
+        static extern void KGraphFromStrings(string kao, string fo, string targets, ref KGraph graph, double p);
 
-        [DllImport("KTerminalDll.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern void KGraphFromStrings(string kao, string fo, string targets, ref KGraph graph);
 
+
+        [DllImport("wirelessDll.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern void WGraphFromStrings(string kao, string fo, string targets, ref WGraph graph, double p);
+        [DllImport("wirelessDll.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern double WReliabilityWithTime(ref WGraph G, out double outTimeInSeconds);
 
         public MainWindow()
         {
@@ -103,68 +97,17 @@ namespace diplom
                 Filter = "Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*"
             };
 
-            double loadTime = 0;
-            if (ATRButton.IsChecked == true)
+            if (openFileDialog.ShowDialog() == true)
             {
-                TargetsText.IsReadOnly = true;
-                try
-                {
-                    if (openFileDialog.ShowDialog() == true)
-                    {
-                        string filePath = openFileDialog.FileName;
-                        Graph graph;
+                var stopwatch = Stopwatch.StartNew();
 
-                        try
-                        {
-                            graph = GraphFromFile(filePath, ref loadTime);
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Ошибка при загрузке графа: {ex.Message}");
-                            return;
-                        }
+                string[] lines = File.ReadAllLines(openFileDialog.FileName);
+                KAOText.Text = lines[2];
+                FOText.Text = lines[3];
+                TargetsText.Text = lines[4];
+                stopwatch.Stop();
 
-                        KAOText.Text = string.Join(", ", graph.KAO.Take(graph.VertNumb + 1));
-                        FOText.Text = string.Join(", ", graph.FO.Take(graph.EdgNumb * 2));
-                        Graphload.Text = loadTime.ToString("R");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Ошибка открытия файла: {ex.Message}");
-                }
-            }
-            else if (KTRButton.IsChecked == true)
-            {
-                TargetsText.IsReadOnly = false;
-                try
-                {
-                    if (openFileDialog.ShowDialog() == true)
-                    {
-                        string filePath = openFileDialog.FileName;
-                        KGraph graph = new KGraph();
-
-                        graph = ReadingGraphFromFile(filePath, ref loadTime);
-                        if (graph.FO[graph.FO.Length - 1] != -858993460 || graph.KAO[graph.KAO.Length - 1] != -858993460)
-                        {
-                            KAOText.Text = string.Join(", ", graph.KAO.Take(graph.VertexCount + 1));
-                            FOText.Text = string.Join(", ", graph.FO.Take(graph.EdgeCount * 2));
-                            if (graph.Targets[1] >= 0)
-                            {
-                                TargetsText.Text = string.Join(", ", graph.Targets.Take(graph.VertexCount + 1));
-                            }
-                            Graphload.Text = loadTime.ToString("R");
-                        }
-                        else
-                        {
-                            MessageBox.Show("Неверный формат файла");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Ошибка загрузки графа: {ex.Message}");
-                }
+                Graphload.Text = stopwatch.ToString();
             }
         }
 
@@ -175,59 +118,12 @@ namespace diplom
                 MessageBox.Show("Введите данные!");
                 return;
             }
-
-            int numberOfIterations = 100;
-            double reliabilityTime = 0;
-            int breaks = 0;
             double timeMs = 0;
             int recursionCount = 0;
 
             if (ATRButton.IsChecked == true)
             {
-                Graph graph = new Graph
-                {
-                    KAO = new int[10001],
-                    FO = new int[30000],
-                    PArray = new double[30000]
-                };
 
-                IntPtr graphPtr = IntPtr.Zero;
-
-                try
-                {
-                    graphPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(Graph)));
-
-                    if (graphPtr == IntPtr.Zero)
-                    {
-                        MessageBox.Show("Ошибка выделения памяти!");
-                        return;
-                    }
-
-                    Marshal.StructureToPtr(graph, graphPtr, false);
-
-                    GraphFromStrings(KAOText.Text, FOText.Text, graphPtr);
-
-                    graph = Marshal.PtrToStructure<Graph>(graphPtr);
-
-                    double reliability = 0;
-
-                    reliability = MCReliability(ref graph, numberOfIterations, ref reliabilityTime, ref breaks);
-
-                    Breaks.Text = breaks.ToString();
-                    Reliability.Text = reliabilityTime.ToString("R");
-                    ReliabilityResult.Text = reliability.ToString("R");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Общая ошибка: {ex.Message}\n{ex.StackTrace}");
-                }
-                finally
-                {
-                    if (graphPtr != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(graphPtr);
-                    }
-                }
             }
             else if (KTRButton.IsChecked == true)
             {
@@ -240,10 +136,39 @@ namespace diplom
                         PArray = new double[100],
                         Targets = new int[51]
                     };
-                    KGraphFromStrings(KAOText.Text, FOText.Text, TargetsText.Text, ref graph);
 
-                    
+                    double p = double.Parse(PText.Text, CultureInfo.InvariantCulture);
+
+                    KGraphFromStrings(KAOText.Text, FOText.Text, TargetsText.Text, ref graph, p);
+
                     double reliability = CalculateReliability(ref graph, ref timeMs, ref recursionCount);
+
+                    Reliability.Text = timeMs.ToString("F2");
+                    Breaks.Text = recursionCount.ToString();
+                    ReliabilityResult.Text = reliability.ToString("F6");
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка расчета надежности: {ex.Message}");
+                }
+            }
+            else if(MENCButton.IsChecked == true)
+            {
+                try
+                {
+                    WGraph graph = new WGraph
+                    {
+                        KAO = new int[101],
+                        FO = new int[200],
+                        PArray = new double[200],
+                        Targets = new int[101],
+                        PVert = new double[100]
+                    };
+
+                    double p = double.Parse(PText.Text, CultureInfo.InvariantCulture);
+                    WGraphFromStrings(KAOText.Text, FOText.Text, TargetsText.Text, ref graph, p);
+                    double reliability = WReliabilityWithTime(ref graph, out timeMs);
 
                     Reliability.Text = timeMs.ToString("F2");
                     Breaks.Text = recursionCount.ToString();
@@ -253,6 +178,10 @@ namespace diplom
                 {
                     MessageBox.Show($"Ошибка расчета надежности: {ex.Message}");
                 }
+            }
+            else
+            {
+                MessageBox.Show("Выберите метод");
             }
         }
 
@@ -270,7 +199,7 @@ namespace diplom
                 try
                 {
                     string fileContent = $"Дата: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
-                                         $"Breaks: {Breaks.Text}\n" +
+                                         $"Recursion: {Breaks.Text}\n" +
                                          $"Reliability Time: {Reliability.Text}\n" +
                                          $"Reliability Result: {ReliabilityResult.Text}\n";
 
@@ -283,6 +212,5 @@ namespace diplom
                 }
             }
         }
-
     }
 }
