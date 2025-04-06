@@ -83,7 +83,7 @@ namespace diplom
         [DllImport("wirelessDll.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern void WGraphFromStrings(string kao, string fo, string targets, ref WGraph graph, double p);
         [DllImport("wirelessDll.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern double WReliabilityWithTime(ref WGraph G, out double outTimeInSeconds);
+        static extern double WReliabilityWithTime(ref WGraph G, out double outTimeInSeconds, ref int recCount);
 
         public MainWindow()
         {
@@ -102,12 +102,21 @@ namespace diplom
                 var stopwatch = Stopwatch.StartNew();
 
                 string[] lines = File.ReadAllLines(openFileDialog.FileName);
-                KAOText.Text = lines[2];
-                FOText.Text = lines[3];
-                TargetsText.Text = lines[4];
+                if (lines.Length >= 4)
+                {
+                    KAOText.Text = lines[2];
+                    FOText.Text = lines[3];
+                    TargetsText.Text = "0,";
+                    TargetsText.Text += lines[4];
+                }
+                else
+                {
+                    KAOText.Text = lines[2];
+                    FOText.Text = lines[3];
+                }
                 stopwatch.Stop();
 
-                Graphload.Text = stopwatch.ToString();
+                Graphload.Text = stopwatch.Elapsed.TotalSeconds.ToString();
             }
         }
 
@@ -168,7 +177,7 @@ namespace diplom
 
                     double p = double.Parse(PText.Text, CultureInfo.InvariantCulture);
                     WGraphFromStrings(KAOText.Text, FOText.Text, TargetsText.Text, ref graph, p);
-                    double reliability = WReliabilityWithTime(ref graph, out timeMs);
+                    double reliability = WReliabilityWithTime(ref graph, out timeMs, ref recursionCount);
 
                     Reliability.Text = timeMs.ToString("F2");
                     Breaks.Text = recursionCount.ToString();

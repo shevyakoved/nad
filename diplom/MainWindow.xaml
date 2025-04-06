@@ -37,7 +37,7 @@
             <TextBox x:Name="TargetsText" Height="30" Grid.Row="2" Grid.Column="1"/>
 
             <Label Content="P" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5" Grid.Row="3" Grid.Column="0"/>
-            <TextBox x:Name="PText" Height="30" Grid.Row="3" Grid.Column="1"/>
+            <TextBox x:Name="PText" Height="30" Grid.Row="3" Grid.Column="1" Text="0.5"/>
         </Grid>
 
         <!-- Нижний блок -->
