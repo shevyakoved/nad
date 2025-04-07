@@ -7,26 +7,10 @@ using System.Windows;
 using System.IO;
 using System.Diagnostics;
 using System.Globalization;
+using System.Collections.Generic;
 
 namespace diplom
 {
-    //[StructLayout(LayoutKind.Sequential)]
-    //struct Graph
-    //{
-    //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10001)]
-    //    public int[] KAO;
-
-    //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30000)]
-    //    public int[] FO;
-
-    //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 30000)]
-    //    public double[] PArray;
-
-    //    public int VertNumb;
-    //    public int EdgNumb;
-    //}
-
-
     [StructLayout(LayoutKind.Sequential)]
     struct KGraph
     {
@@ -72,6 +56,10 @@ namespace diplom
 
     public partial class MainWindow : Window
     {
+        [DllImport("atrDll.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern double CalculateAtrReliability(int vertNumb,int edgNumb,uint[] KAO,uint[] FO,double FORel,out double timeInSeconds, out int recursive_deep,out int countOfTriangles,out int countOfEdgesDegs6,out int countFirstTriangles);
+
+
         [DllImport("KTerminalDll.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern double CalculateReliability(ref KGraph G, ref double timeMS, ref int recursionCount);
 
@@ -84,6 +72,10 @@ namespace diplom
         static extern void WGraphFromStrings(string kao, string fo, string targets, ref WGraph graph, double p);
         [DllImport("wirelessDll.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern double WReliabilityWithTime(ref WGraph G, out double outTimeInSeconds, ref int recCount);
+
+
+        int vertNumb = 0;
+        int edgNumb = 0;
 
         public MainWindow()
         {
@@ -102,8 +94,10 @@ namespace diplom
                 var stopwatch = Stopwatch.StartNew();
 
                 string[] lines = File.ReadAllLines(openFileDialog.FileName);
-                if (lines.Length >= 4)
+                if (lines.Length > 4)
                 {
+                    vertNumb = Convert.ToInt32(lines[0]);
+                    edgNumb = Convert.ToInt32(lines[1]);
                     KAOText.Text = lines[2];
                     FOText.Text = lines[3];
                     TargetsText.Text = "0,";
@@ -111,6 +105,8 @@ namespace diplom
                 }
                 else
                 {
+                    vertNumb = Convert.ToInt32(lines[0]);
+                    edgNumb = Convert.ToInt32(lines[1]);
                     KAOText.Text = lines[2];
                     FOText.Text = lines[3];
                 }
@@ -128,11 +124,27 @@ namespace diplom
                 return;
             }
             double timeMs = 0;
+            int recursive_deep;
             int recursionCount = 0;
+            int countOfTriangles;
+            int countOfEdgesDegs6;
+            int countFirstTriangles;
+            double p = double.Parse(PText.Text, CultureInfo.InvariantCulture);
 
             if (ATRButton.IsChecked == true)
             {
-
+                TargetsText.IsReadOnly = true;
+                if (TryParseUIntArray(KAOText.Text, out uint[] kaoArray) && TryParseUIntArray(FOText.Text, out uint[] foArray))
+                {
+                    double reliability = CalculateAtrReliability(vertNumb, edgNumb, kaoArray, foArray, p, out timeMs, out recursive_deep, out countOfTriangles, out countOfEdgesDegs6, out countFirstTriangles);
+                    Reliability.Text = timeMs.ToString();
+                    Breaks.Text = countOfTriangles.ToString();
+                    ReliabilityResult.Text = reliability.ToString();
+                }
+                else
+                {
+                    MessageBox.Show("Ошибка ввода чисел в KAO или FO");
+                }
             }
             else if (KTRButton.IsChecked == true)
             {
@@ -146,10 +158,7 @@ namespace diplom
                         Targets = new int[51]
                     };
 
-                    double p = double.Parse(PText.Text, CultureInfo.InvariantCulture);
-
                     KGraphFromStrings(KAOText.Text, FOText.Text, TargetsText.Text, ref graph, p);
-
                     double reliability = CalculateReliability(ref graph, ref timeMs, ref recursionCount);
 
                     Reliability.Text = timeMs.ToString("F2");
@@ -175,7 +184,6 @@ namespace diplom
                         PVert = new double[100]
                     };
 
-                    double p = double.Parse(PText.Text, CultureInfo.InvariantCulture);
                     WGraphFromStrings(KAOText.Text, FOText.Text, TargetsText.Text, ref graph, p);
                     double reliability = WReliabilityWithTime(ref graph, out timeMs, ref recursionCount);
 
@@ -207,7 +215,7 @@ namespace diplom
             {
                 try
                 {
-                    string fileContent = $"Дата: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+                    string fileContent = $"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
                                          $"Recursion: {Breaks.Text}\n" +
                                          $"Reliability Time: {Reliability.Text}\n" +
                                          $"Reliability Result: {ReliabilityResult.Text}\n";
@@ -220,6 +228,25 @@ namespace diplom
                     MessageBox.Show($"Ошибка при сохранении файла:\n{ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+        bool TryParseUIntArray(string input, out uint[] result)
+        {
+            var parts = input.Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            List<uint> values = new List<uint>();
+
+            foreach (var part in parts)
+            {
+                if (uint.TryParse(part, out uint val))
+                    values.Add(val);
+                else
+                {
+                    result = null;
+                    return false;
+                }
+            }
+
+            result = values.ToArray();
+            return true;
         }
     }
 }
